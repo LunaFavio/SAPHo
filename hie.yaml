@@ -1,0 +1,7 @@
+cradle:
+  stack:
+    - path: "./src"
+      component: "SAPHo:lib"
+
+    - path: "./test"
+      component: "SAPHo:test:SAPHo-test"
