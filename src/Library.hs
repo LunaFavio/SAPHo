@@ -163,4 +163,76 @@ plaga2 nroPisoAfectado redHabitabilidad edificio = edificio {
 
 --c) Terremoto: Reduce la robustez del edificio en un valor indicado.
 
--- 
+terremoto redRobustez edificio = edificio {
+    coefRob = max 0 (coefRob edificio - redRobustez)
+}
+
+--6)
+--a) Ampliación: se realiza la construcción de un nuevo piso con una determinada cantidad de departamentos 
+--   y de metros, que se reparten equitativamente entre los departamentos. El piso se agrega arriba, 
+--   porque las máquinas para levantar los N pisos superiores de un edificio las tenemos descompuestas 
+--   y no podemos meterlo en el medio. Al ser nuevo, su habitabilidad es de 100.
+
+ampliacion cantDeptos metrosTotal edificio = edificio {
+    pisos = pisos edificio ++ [nuevoPiso]
+}
+    where
+        nuevoPiso = Piso {departamentos= split cantDeptos Departamento {superficie=metrosTotal, habitabilidad=100}}
+        --nuevoPiso = generarPiso cantDeptos metrosTotal
+
+generarPiso cantDeptos metrosTotal = Piso {
+    departamentos = replicate cantDeptos $ Departamento {superficie= metrosTotal / cantDeptos, habitabilidad=100}
+}
+
+
+--b) Fumigación: A cada departamento que tiene habitabilidad menor a 60%, les sube en 20 puntos porcentuales.
+
+fumigacion edificio = edificio {
+    pisos = fumigarPisos $ pisos edificio
+}
+
+fumigarPisos pisos = map fumigarDeptos pisos
+
+fumigarDeptos piso = piso {
+    departamentos = map necesitaFumigacion $ departamentos piso
+}
+
+necesitaFumigacion departamento 
+    | habitabilidad departamento < 60 = departamento {habitabilidad = habitabilidad departamento + 20}
+    | otherwise = departamento
+
+--c) MergeEdificio: Debe aplicar un merge sobre un número de piso dado de un edificio.
+
+mergeEdificio nroPiso edificio = edificio {
+    pisos = cambiarElemento nroPiso nuevoPiso $ pisos edificio 
+}
+    where
+        pisoMergeado = merge $ departamentos $ pisos edificio !! (nroPiso - 1)
+        nuevoPiso = Piso { departamentos = [pisoMergeado]}
+
+--d) SplitEdificio: Recibe una cantidad de nuevos departamentos y el número de piso donde debe hacer 
+--   un split sobre el último departamento. 
+
+splitEdificio cantDeptos nroPiso edificio = edificio {
+    pisos = cambiarElemento nroPiso nuevoPiso $ pisos edificio
+ }
+    where
+        pisoAfectado = pisos edificio !! (nroPiso - 1)
+        deptoAfectado = split cantDeptos . last $ departamentos pisoAfectado
+        nuevoPiso = pisoAfectado {departamentos = init (departamentos pisoAfectado) ++ deptoAfectado}
+
+--7
+--Dada la siguiente función, determine y explique su tipo:
+--funcionLoca a b c = 
+--	all ((>c) . fst a) . foldl (\x y -> b y . snd a $ x) []
+
+-- la funcion quiere determinar si todos los elementos de una lista cumplen con una condicion
+-- en este caso se usa la funcion foldl para a partir de una lista dada generar un resultado acumulado
+-- de la misma a partir de una funcion acumuladora
+-- (\x y -> b y . snd a $ x) es una funcion anonima donde a x se le aplica la funcion compuesta b y .snd a
+-- para ello pasa como parametro al elemento x a la funcion que es segundo elemento de la tupla a. A ese 
+-- resultado lo compone con la funcion b y. 
+-- sobre el resultado del foldl, verifica que todos sus elementos cumplan con una condicion: ((>c) . fst a)
+-- La condicion implica que todos los elementos resultantes del foldl tienen que ser mayores que c 
+-- despues de haberles aplicado la funcion que es primer elemento de la tupla a 
+
