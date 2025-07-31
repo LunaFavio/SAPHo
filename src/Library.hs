@@ -142,6 +142,25 @@ reducirHab efecto departamento = departamento {
 
 --b) Plaga: La plaga afecta a un piso del edificio dado por su número y reduce la habitabilidad 
 --   de sus departamentos en una cantidad de puntos porcentuales variable.
+
+plaga nroPisoAfectado redHabitabilidad edificio = edificio{
+    pisos = pisosAbajo ++ [pisoAfectado] ++ pisosArriba
+}
+    where
+        pisoAfectado = plagarPiso redHabitabilidad $ pisos edificio !! nroPisoAfectado
+        pisosArriba = drop nroPisoAfectado $ pisos edificio
+        pisosAbajo = take (nroPisoAfectado - 1) $ pisos edificio
+
+plagarPiso efecto piso = piso {
+    departamentos = map (reducirHab efecto) $ departamentos piso
+}
+--plaga usando cambiarElemento
+plaga2 nroPisoAfectado redHabitabilidad edificio = edificio {
+    pisos = cambiarElemento nroPisoAfectado pisoPlagado $ pisos edificio
+}
+    where
+        pisoPlagado = plagarPiso redHabitabilidad $ pisos edificio !! nroPisoAfectado
+
 --c) Terremoto: Reduce la robustez del edificio en un valor indicado.
 
 -- 
